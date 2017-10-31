@@ -1,0 +1,29 @@
+{
+  "name": "ivgas-bot",
+  "version": "1.0.0",
+  "description": "Bot for the IVGAS Discord by @BreakTruth",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IVGASCommunity/IVGAS-Bot.git"
+  },
+  "author": "BreakTruth",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/IVGASCommunity/IVGAS-Bot/issues"
+  },
+  "homepage": "https://github.com/IVGASCommunity/IVGAS-Bot#readme",
+  "dependencies": {
+    "discord.js": "github:hydrabolt/discord.js",
+    "discord.js-commando": "github:Gawdl3y/discord.js-commando",
+    "ffmpeg-binaries": "^3.2.2-3",
+    "lodash": "^4.17.4",
+    "opusscript": "0.0.4",
+    "sqlite": "^2.8.0",
+    "youtube-search": "^1.0.10",
+    "ytdl-core": "^0.18.1"
+  }
+}
