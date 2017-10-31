@@ -2,6 +2,7 @@ const discord = require('discord.js');
 const commando = require('discord.js-commando');
 const sql = require('sqlite');
 const path = require('path');
+const token = require('./token.js');
 
 const client = new commando.Client();
 
@@ -250,4 +251,4 @@ client.registry.registerGroups([
 client.registry.registerDefaults();
 client.registry.registerCommandsIn(__dirname + '/commands');
 
-client.login('MzcyOTU5ODEzMDg2NDc4MzM2.DNLxcg.PpkVwdBYaoWvPIOkoy6W4ZpUKJM');
+client.login(token);
