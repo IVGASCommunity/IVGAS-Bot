@@ -28,4 +28,5 @@ build/Release
 node_modules
 
 # files
-token.js
+keys.json
+.DS_Store

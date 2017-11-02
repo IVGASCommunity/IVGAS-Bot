@@ -25,10 +25,9 @@ class avatarCommand extends commando.Command {
     if (!args.user) {
       args.user = message.author;
     }
-    args.user.avatarURL()
+
     message.channel.send({embed: new discord.MessageEmbed()
       .setImage(args.user.displayAvatarURL({
-        format: 'png',
         size: 2048
       }))
     });

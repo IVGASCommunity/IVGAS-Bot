@@ -3,13 +3,14 @@ const youtubeDownload = require('ytdl-core');
 const youtubeSearch = require('youtube-search');
 const util = require("util");
 const path = require('path');
+const keys = require('../../keys.json');
 const _ = require("lodash");
 var xhr = require("xhr");
 if (!xhr.open) xhr = require("request");
 
 const options = {
 	maxResults: 10,
-	key: 'AIzaSyA_mlx3zcBpX-hyiONa1IN7-O_3MNyQhsI'
+	key: keys["yt"]
 };
 
 class MusicPlayCommand extends commando.Command {
@@ -96,31 +97,30 @@ class MusicPlayCommand extends commando.Command {
 			}
 			//console.dir(results);
 
-	let finalSearchResults = [];
+			let finalSearchResults = [];
 
-	let ids = _.map(_.filter(results, { kind: "youtube#video" }), r => {
-		return r.id;
-	});
+			let ids = _.map(_.filter(results, { kind: "youtube#video" }), r => {
+				return r.id;
+			});
 
-	xhr(
-		{
-			url: `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(",")}&part=contentDetails&key=${options.key}`,
-			method: "GET"
-		},
-		(err, res, body) => {
-			const contentDetailsResults = JSON.parse(body);
+			xhr({
+				url: `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(",")}&part=contentDetails&key=${options.key}`,
+				method: "GET"
+			},
+			(err, res, body) => {
+				const contentDetailsResults = JSON.parse(body);
 
-			if (!err) {
-				//console.log(util.inspect(contentDetailsResults, false, null));
+				if (!err) {
+					//console.log(util.inspect(contentDetailsResults, false, null));
 
-				_.forEach(contentDetailsResults.items, r => {
-					let video = _.find(results, { id: r.id });
-					if (r.id) {
-						video.contentDetails = r.contentDetails;
+					_.forEach(contentDetailsResults.items, r => {
+						let video = _.find(results, { id: r.id });
+						if (r.id) {
+							video.contentDetails = r.contentDetails;
 
-						finalSearchResults.push(video);
-					}
-				});
+							finalSearchResults.push(video);
+						}
+					});
 						if (!args.song.startsWith("https://www.youtube.com/watch?v=") && !args.song.startsWith("http://www.youtube.com/watch?v=") && !args.song.startsWith("http://youtu.be/") && !args.song.startsWith("https://youtu.be/")) {
 							message.channel.send(finalSearchResults.map((currentValue, index) => {
 								return `${index + 1} - ${currentValue.title} by ${currentValue.channelTitle} [${currentValue.contentDetails.duration.replace("PT","").replace("H",":").replace("M",":").replace("S","")}]`;

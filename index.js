@@ -2,20 +2,25 @@ const discord = require('discord.js');
 const commando = require('discord.js-commando');
 const sql = require('sqlite');
 const path = require('path');
-const token = require('./token.js');
+const keys = require('./keys.json');
 
 const client = new commando.Client();
 
 let server;
 let channels;
 let roles;
+let sendEmbed;
 
+/*
+"#11C422"
+"#C46B11"
+"#C41111"*/
 
 client.on("ready", () => {
-  console.log("ready!");
+  console.log("----------ready!----------");
 
-  module.exports = server = client.guilds.get("312938209137131541");
-  module.exports = channels = {
+  server = client.guilds.get("312938209137131541");
+  channels = {
     "general-discussion": server.channels.get("312944825370411018"),
     "coding": server.channels.get("374602133552627722"),
     "ivgas-coding-hub": server.channels.get("374726378370760704"),
@@ -69,7 +74,7 @@ client.on("ready", () => {
     "nsfw-hentai-and-fanart": server.channels.get("312947246641446914"),
     "General Channels": server.channels.get("371993712013606913")
   };
-  module.exports = roles = {
+  roles = {
     "everyone": server.roles.get("312938209137131541"),
     "I.V.G.A.S Founder": server.roles.get("312938397528227841"),
     "I.V.G.A.S Committee": server.roles.get("312945465974980628"),
@@ -86,152 +91,275 @@ client.on("ready", () => {
     "I.V.G.A.S Resident Lewd Masters": server.roles.get("373576802154840086"),
     "KawaiiBot": server.roles.get("374345129173188610")
   };
+  /*
+  sendEmbed = (channel, color, author, title, description, url, thumbnail, fields, image, footer, timestamp) => {
+    console.log("test");
+    const embed = new discord.MessageEmbed({
+      "color": color,
+      "author": {
+        "name": author[0],
+        "url": author[1],
+        "icon_url": author[2]
+      },
+      "title": title,
+      "description": description,
+      "url": url,
+      "thumbnail": {
+        "url": thumbnail
+      },
+      "fields": fields,
+      "image": {
+        "url": image
+      },
+      "footer": {
+        "text": footer[0],
+        "icon_url": footer[1]
+      },
+      "timestamp": timestamp
+    });
+    console.log(embed);
+    channel.send({embed: embed});
+  }
+  */
+
 
   client.options.owner = roles["I.V.G.A.S Developer"].members.map(member => {return member.id});
 });
 
 
-/*
-"#C41111"
-"#C46B11"
-"#11C422"
-*/
-
-
 client.on("channelCreate", channel => {
+  /*
+  sendEmbed(channels["bot-logs"], 0xFFFFFF, null, `The channel **${channel.name}** [${channel.id}] has been created`, channel.toString(), null, null, null, null, null, new Date());
+  */
+
   channels["bot-logs"].send({embed: new discord.MessageEmbed()
     .setColor("#11C422")
-    .setDescription(channel.toString())
+    .setTitle(`The channel __${channel.name}__ has been created`)
+    .setDescription(`Channel: ${channel.toString()} Channel ID: [${channel.id}]`)
     .setTimestamp()
   });
 });
 
 client.on("channelDelete", channel => {
-
-});
-
-client.on("channelPinsUpdate", (channel, time) => {
-
-});
-
-client.on("channelUpdate", (oldChannel, newChannel) => {
-
-});
-
-client.on("debug", info => {
-
-});
-
-client.on("emojiCreate", emoji => {
-
-});
-
-client.on("emojiDelete", emoji => {
-
-});
-
-client.on("emojiUpdate", (oldEmoji, newEmoji) => {
-
-});
-
-client.on("guildBanAdd", (guild, user) => {
-
-});
-
-client.on("guildBanRemove", (guild, user) => {
-
-});
-
-client.on("guildMemberAdd", member => {
-  /*
   channels["bot-logs"].send({embed: new discord.MessageEmbed()
-    .setColor("#11C422")
-    .setAuthor(`${member.user.tag} [${member.user.id}]`, member.user.displayAvatarURL())
-    .setDescription(oldMessage.channel.toString())
-    .addField("Before Edit", oldMessage.content, true)
-    .addField("After Edit", newMessage.content, true)
-    .setTimestamp()
-  });  */
-
-
-  setTimeout(() => {
-    if (server.members.has(member)) {
-      member.addRole(roles["I.V.G.A.S Member"]);
-    }
-  }, 60000);
-});
-
-client.on("guildMemberRemove", member => {
-
-});
-
-client.on("guildMemberUpdate", (oldMember, newMember) => {
-
-});
-
-client.on("guildUpdate", (oldGuild, newGuild) => {
-
-});
-
-client.on("message", message => {
-
-});
-
-client.on("messageDelete", message => {
-
-});
-
-client.on("messageReactionAdd", (reaction, user) => {
-
-});
-
-client.on("messageReactionRemove", (reaction, user) => {
-
-});
-
-client.on("messageReactionRemoveAll", message => {
-
-});
-
-client.on("messageUpdate", (oldMessage, newMessage) => {
-  channels["bot-logs"].send({embed: new discord.MessageEmbed()
-    .setColor("#C46B11")
-    .setAuthor(`${oldMessage.author.tag} [${oldMessage.author.id}]`, oldMessage.author.displayAvatarURL())
-    .setTitle("Message has been edited")
-    .setDescription(oldMessage.channel.toString())
-    .addField("Before Edit", oldMessage.content, true)
-    .addField("After Edit", newMessage.content, true)
+    .setColor("#C41111")
+    .setTitle(`The channel __${channel.name}__ has been deleted`)
+    .setDescription(`Channel ID: [${channel.id}]`)
     .setTimestamp()
   });
 });
 
-client.on("presenceUpdate", (oldMember, newMember) => {
+client.on("channelPinsUpdate", (channel, time) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C46B11")
+    .setTitle(`Pins in __${channel.name}__ have been edited`)
+    .setDescription(`Channel: ${channel.toString()} Channel ID: [${channel.id}]`)
+    .setTimestamp()
+  });
+});
 
+client.on("channelUpdate", (oldChannel, newChannel) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C46B11")
+    .setTitle(`The channel __${newChannel.name}__ has been edited`)
+    .setDescription(`Channel: ${newChannel.toString()} Channel ID: [${newChannel.id}]`)
+    .setTimestamp()
+  });
+});
+
+client.on("debug", info => {
+  console.log(info);
+});
+
+client.on("emojiCreate", emoji => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#11C422")
+    .setTitle(`The emoji __${emoji.name}__ has been added`)
+    .setDescription(`Emoji ID: [${emoji.id}]`)
+    .setImage(emoji.url)
+    .setTimestamp()
+  });
+});
+
+client.on("emojiDelete", emoji => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The emoji __${emoji.name}__ has been deleted`)
+    .setDescription(`Emoji ID: [${emoji.id}]`)
+    .setImage(emoji.url)
+    .setTimestamp()
+  });
+});
+
+client.on("emojiUpdate", (oldEmoji, newEmoji) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C46B11")
+    .setTitle(`The emoji __${oldEmoji.name}__ has been edited`)
+    .setDescription(`Emoji ID: [${newEmoji.id}]`)
+    .addField("Before Edit", oldEmoji.name, true)
+    .addField("After Edit", newEmoji.name, true)
+    .setImage(newEmoji.url)
+    .setTimestamp()
+  });
+});
+
+client.on("guildBanAdd", (guild, user) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setAuthor(user.tag, user.displayAvatarURL())
+    .setTitle(`The user __${user.username}__ has been banned`)
+    .setDescription(`User ID: [${user.id}]`)
+    .setTimestamp()
+  });
+});
+
+client.on("guildBanRemove", (guild, user) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#11C422")
+    .setAuthor(user.tag, user.displayAvatarURL())
+    .setTitle(`The user __${user.username}__ has been unbanned`)
+    .setDescription(`User ID: [${user.id}]`)
+    .setTimestamp()
+  });
+});
+
+client.on("guildMemberAdd", member => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#11C422")
+    .setTitle(`The user __${member.user.username}__ has joined`)
+    .setDescription(`User ID: [${member.user.id}]`)
+    .setImage(member.user.displayAvatarURL({
+      format: 'png',
+      size: 2048
+    }))
+    .setTimestamp()
+  });
+  member.addRole(roles["I.V.G.A.S Member"]);
+});
+
+client.on("guildMemberRemove", member => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The user __${member.user.username}__ has left!`)
+    .setDescription(`User ID: [${member.user.id}]`)
+    .setImage(member.user.displayAvatarURL({
+      format: 'png',
+      size: 2048
+    }))
+    .setTimestamp()
+  });
+});
+
+client.on("guildUpdate", (oldGuild, newGuild) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C46B11")
+    .setTitle(`The server has been edited!`)
+    .setTimestamp()
+  });
+});
+
+client.on("message", message => {});
+
+client.on("messageDelete", message => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`A message has been deleted!`)
+    .setDescription(`Channel: ${message.channel.toString()} message ID: [${message.id}]`)
+    .addField("Message", message.content)
+    .setTimestamp()
+  });
+});
+
+client.on("messageDeleteBulk", messages => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`${messages.array().length} messages have been deleted!`)
+    .setDescription(`Channel: ${messages.first().channel.toString()}`)
+    .setTimestamp()
+  });
+});
+
+client.on("messageReactionRemoveAll", message => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`All reactions to a message have been deleted!`)
+    .setDescription(`Channel: ${message.channel.toString()} message ID: [${message.id}]`)
+    .addField("Message", message.content)
+    .setTimestamp()
+  });
+});
+
+client.on("messageUpdate", (oldMessage, newMessage) => {
+  if (message.content != newMessage.content) {
+    channels["bot-logs"].send({embed: new discord.MessageEmbed()
+      .setColor("#C46B11")
+      .setTitle(`A message has been edited!`)
+      .setDescription(`Channel: ${newMessage.channel.toString()} message ID: [${newMessage.id}]`)
+      .addField("Before Edit", oldMessage.name, true)
+      .addField("After Edit", newMessage.name, true)
+      .setTimestamp()
+    });
+  }
 });
 
 client.on("rateLimit", () => {
-
+  console.error("You are getting rate-limited!");
 });
 
 client.on("roleCreate", role => {
-
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#11C422")
+    .setTitle(`The role ${role.name} has been created`)
+    .setDescription(`Role: ${role.toString()} Role ID: [${role.id}]`)
+    .setTimestamp()
+  });
 });
 
 client.on("roleDelete", role => {
-
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The role ${role.name} has been deleted`)
+    .setDescription(`Role: ${role.toString()} Role ID: [${role.id}]`)
+    .setTimestamp()
+  });
 });
 
 client.on("roleUpdate", (oldRole, newRole) => {
-
-});
-
-client.on("userUpdate", (oldUser, newUser) => {
-
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The role ${newRole.name} has been edited`)
+    .setDescription(`Role: ${newRole.toString()} Role ID: [${newRole.id}]`)
+    .setTimestamp()
+  });
 });
 
 client.on("warn", warning => {
-
+  console.warn(warning);
 });
+
+client.on("commandBlocked", (message, reason) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The command ${message.command.name} has been blocked`)
+    .setDescription(`Message ID: [${message.id}]`)
+    .addField("Args", message.argString)
+    .addField("Reason", reason)
+    .setTimestamp()
+  });
+});
+
+client.on("commandError", (command, error, message, args, fromPattern) => {
+  channels["bot-logs"].send({embed: new discord.MessageEmbed()
+    .setColor("#C41111")
+    .setTitle(`The command ${command.name} had an error`)
+    .setDescription(`Message ID: [${message.id}]`)
+    .addField("Args", args)
+    .addField("Error", error)
+    .setTimestamp()
+  });
+});
+
+
 
 
 process.on("unhandledRejection", err => {
@@ -251,4 +379,4 @@ client.registry.registerGroups([
 client.registry.registerDefaults();
 client.registry.registerCommandsIn(__dirname + '/commands');
 
-client.login(token);
+client.login(keys["bot"]);
