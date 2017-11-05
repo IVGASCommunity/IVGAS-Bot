@@ -29,4 +29,5 @@ node_modules
 
 # files
 keys.json
+data.json
 .DS_Store

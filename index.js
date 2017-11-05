@@ -11,11 +11,6 @@ let channels;
 let roles;
 let sendEmbed;
 
-/*
-"#11C422"
-"#C46B11"
-"#C41111"*/
-
 client.on("ready", () => {
   console.log("----------ready!----------");
 
@@ -91,47 +86,17 @@ client.on("ready", () => {
     "I.V.G.A.S Resident Lewd Masters": server.roles.get("373576802154840086"),
     "KawaiiBot": server.roles.get("374345129173188610")
   };
-  /*
-  sendEmbed = (channel, color, author, title, description, url, thumbnail, fields, image, footer, timestamp) => {
-    console.log("test");
-    const embed = new discord.MessageEmbed({
-      "color": color,
-      "author": {
-        "name": author[0],
-        "url": author[1],
-        "icon_url": author[2]
-      },
-      "title": title,
-      "description": description,
-      "url": url,
-      "thumbnail": {
-        "url": thumbnail
-      },
-      "fields": fields,
-      "image": {
-        "url": image
-      },
-      "footer": {
-        "text": footer[0],
-        "icon_url": footer[1]
-      },
-      "timestamp": timestamp
-    });
-    console.log(embed);
-    channel.send({embed: embed});
-  }
-  */
-
 
   client.options.owner = roles["I.V.G.A.S Developer"].members.map(member => {return member.id});
 });
 
+client.on("debug", info => console.log(info));
+client.on("warn", warning => console.warn(warning));
+client.on("error", error => console.error(error.stack));
+client.on("rateLimit", () => console.error("You are getting rate-limited!"));
+
 
 client.on("channelCreate", channel => {
-  /*
-  sendEmbed(channels["bot-logs"], 0xFFFFFF, null, `The channel **${channel.name}** [${channel.id}] has been created`, channel.toString(), null, null, null, null, null, new Date());
-  */
-
   channels["bot-logs"].send({embed: new discord.MessageEmbed()
     .setColor("#11C422")
     .setTitle(`The channel __${channel.name}__ has been created`)
@@ -165,10 +130,6 @@ client.on("channelUpdate", (oldChannel, newChannel) => {
     .setDescription(`Channel: ${newChannel.toString()} Channel ID: [${newChannel.id}]`)
     .setTimestamp()
   });
-});
-
-client.on("debug", info => {
-  console.log(info);
 });
 
 client.on("emojiCreate", emoji => {
@@ -258,8 +219,6 @@ client.on("guildUpdate", (oldGuild, newGuild) => {
   });
 });
 
-client.on("message", message => {});
-
 client.on("messageDelete", message => {
   channels["bot-logs"].send({embed: new discord.MessageEmbed()
     .setColor("#C41111")
@@ -290,20 +249,17 @@ client.on("messageReactionRemoveAll", message => {
 });
 
 client.on("messageUpdate", (oldMessage, newMessage) => {
-  if (message.content != newMessage.content) {
+  if (oldMessage.content != newMessage.content) {
     channels["bot-logs"].send({embed: new discord.MessageEmbed()
       .setColor("#C46B11")
+      .setAuthor(`${newMessage.author.tag} [${newMessage.author.id}]`, newMessage.author.displayAvatarURL())
       .setTitle(`A message has been edited!`)
       .setDescription(`Channel: ${newMessage.channel.toString()} message ID: [${newMessage.id}]`)
-      .addField("Before Edit", oldMessage.name, true)
-      .addField("After Edit", newMessage.name, true)
+      .addField("Before Edit", oldMessage.content, true)
+      .addField("After Edit", newMessage.content, true)
       .setTimestamp()
     });
   }
-});
-
-client.on("rateLimit", () => {
-  console.error("You are getting rate-limited!");
 });
 
 client.on("roleCreate", role => {
@@ -333,10 +289,6 @@ client.on("roleUpdate", (oldRole, newRole) => {
   });
 });
 
-client.on("warn", warning => {
-  console.warn(warning);
-});
-
 client.on("commandBlocked", (message, reason) => {
   channels["bot-logs"].send({embed: new discord.MessageEmbed()
     .setColor("#C41111")
@@ -360,11 +312,7 @@ client.on("commandError", (command, error, message, args, fromPattern) => {
 });
 
 
-
-
-process.on("unhandledRejection", err => {
-  console.error(err.stack);
-});
+process.on("unhandledRejection", error => console.error(error.stack));
 
 
 sql.open(path.join(__dirname, "database.sqlite")).then((db) => {

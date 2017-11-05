@@ -1,153 +1,131 @@
+const discord = require('discord.js');
 const commando = require('discord.js-commando');
 const youtubeDownload = require('ytdl-core');
-const youtubeSearch = require('youtube-search');
-const util = require("util");
-const path = require('path');
+const request = require('request');
 const keys = require('../../keys.json');
-const _ = require("lodash");
-var xhr = require("xhr");
-if (!xhr.open) xhr = require("request");
+const querystring = require('querystring');
+const path = require('path');
 
-const options = {
-	maxResults: 10,
-	key: keys["yt"]
-};
-
-class MusicPlayCommand extends commando.Command {
-	constructor(client) {
-		super(client, {
-			name: 'play',
-			group: path.basename(path.dirname(__filename)),
-			memberName: 'play',
-			description: 'play music from youtube videos!',
-			examples: ['play never gonna give you up'],
+class playCommand extends commando.Command {
+  constructor(client) {
+    super(client, {
+      name: 'play',
+      group: path.basename(path.dirname(__filename)),
+      memberName: 'play',
+      description: 'lets you play music',
       guildOnly: true,
 
-			args: [
-				{
-					key: 'song',
-					prompt: 'What youtube video should I play?',
-					type: 'string'
+      args: [
+        {
+          key: 'song',
+          prompt: 'What song would you like to play?',
+          type: 'string'
+        }
+      ]
+    });
+
+    this.queue = new Array();
+    this.currentSong = new Object();
+  }
+
+
+  async playSong(songLink, songName, songAuthor, songDuration, songSource, message) {
+    const voiceChannel = message.member.voiceChannel;
+    const connection = await voiceChannel.join();
+
+    connection.on("debug", info => console.log(info));
+    connection.on("error", error => console.error(error.stack));
+    connection.on("failed", error => console.error(error.stack));
+    connection.on("warn", warning => console.warn(warning));
+
+    if (connection.speaking) {
+      message.channel.send(`Added \`${songName}\` [${songDuration}] by \`${songAuthor}\` from \`${songSource}\` to queue!`);
+      this.queue.push({link: songLink, name: songName, author: songAuthor, source: songSource});
+    } else {
+			const source = () => {
+        if (songSource == "youtube") {
+          return youtubeDownload(songLink, {filter: 'audioonly'});
+        } else if (songSource == "direct link") {
+          return songLink;
+        }
+      }
+      const stream = connection.playStream(source());
+
+      stream.on("debug", info => console.log(info));
+      stream.on("error", error => console.error(error.stack));
+
+      stream.on("start", () => {
+        this.currentSong = {link: songLink, name: songName, author: songAuthor, source: songSource};
+        message.channel.send(`Now playing \`${songName}\` [${songDuration}] by \`${songAuthor}\` from \`${songSource}\``);
+      });
+
+      stream.on("end", reason => {
+        setTimeout(() => {
+          if (voiceChannel.members.size == 1) {
+            voiceChannel.leave();
+						message.channel.send(`Left voice channel \`${voiceChannel.name}\` because the song finished and no user is present!`);
+          } else if (this.queue[0]) {
+            this.playSong(this.queue[0].link, this.queue[0].name, this.queue[0].author, this.queue[0].author,message);
+            this.queue.shift();
+          } else {
+            message.channel.send("The queue ended!");
+          }
+        }, 250);
+        console.log(reason);
+      });
+    }
+  }
+
+  async run(message, args) {
+    const voiceChannel = message.member.voiceChannel;
+    const ytRegEx = new RegExp(/(?:http(?:s?):\/\/)?(?:www\.)?youtu(?:\.be|be\.com)\/(?:watch\?v=|embed\/watch\?)?(?:feature=player_embedded&v=)?(.+)/);
+		const ISOtoReadable = (isoTime) => {
+			return isoTime.split(/[A-Z]/).filter(element => element.length > 0).reduce((sum, element, index) => {
+				if (index > 0) {
+					if (!/\d{2}/.test(element)) element = `0${element}`;
+					return `${sum}:${element}`;
 				}
-			]
-		});
-		this.queue = new Map();
-		this.currentSong = new Map();
-	}
-
-	playSong(song_link, song_name, song_author, message) {
-		const voiceChannel = message.member.voiceChannel;
-		voiceChannel.join().then(connection => {
-
-			if (connection.speaking) {
-				message.channel.send(`Added \`${song_name}\` by \`${song_author}\` to queue!`);
-
-				if (this.queue.has(message.guild.id)) {
-
-					let currentQueue = this.queue.get(message.guild.id);
-					currentQueue.push({link: song_link, name: song_name, author: song_author});
-					this.queue.set(message.guild.id, currentQueue);
-				} else {
-					this.queue.set(message.guild.id, [{link: song_link, name: song_name, author: song_author}]);
-				}
-
-				return;
-			}
-			this.currentSong.set(message.guild.id, {link: song_link, name: song_name, author: song_author});
-			message.channel.send(`Now playing \`${song_name}\` by \`${song_author}\``);
-			connection.playStream(youtubeDownload(song_link, {filter: 'audioonly'})).on('end', () => {
-				setTimeout(() =>{
-					if (voiceChannel.members.size == 1) {
-						voiceChannel.leave();
-						message.channel.send(`Left voice channel \`${voiceChannel.name}\` because song finished and no user is present!`);
-					} else if (this.queue.has(message.guild.id)) {
-						let currentQueue = this.queue.get(message.guild.id);
-						if (currentQueue[0]) {
-							this.playSong(currentQueue[0].link, currentQueue[0].name, currentQueue[0].author, message);
-							currentQueue.shift();
-
-							this.queue.set(message.guild.id, currentQueue);
-						} else {
-							message.channel.send("An error occured, please retry!");
-						}
-					} else {
-						message.channel.send("The queue ended!");
-					}
-				}, 250);
 			});
-		});
-	}
-
-
-	async run(message, args) {
-		const self = this;
-		const voiceChannel = message.member.voiceChannel;
-
-		if (!voiceChannel) {
-			return message.reply("Please join a voice channel!");
 		}
 
-		if (!voiceChannel.joinable) {
-			return message.reply(`I am not allowed to join ${voiceChannel.name}!`);
-		}
+    if (!voiceChannel) {
+      return message.reply("Please join a voice channel!");
+    }
 
-		youtubeSearch(args.song, options, function(err, results) {
-			if(err) {
-				return console.log(err);
-			}
-			//console.dir(results);
+    if (ytRegEx.test(args.song)) {
+      request({
+        url: `https://www.googleapis.com/youtube/v3/videos?${querystring.stringify({id: args.song.match(ytRegEx)[1], part: 'snippet,contentDetails', key: keys['yt']})}`,
+        method: 'GET'
+      }, (error, response, result) => {
+        if (error) {
+          console.error(error);
+        }
 
-			let finalSearchResults = [];
+				result = JSON.parse(result);
 
-			let ids = _.map(_.filter(results, { kind: "youtube#video" }), r => {
-				return r.id;
-			});
-
-			xhr({
-				url: `https://www.googleapis.com/youtube/v3/videos?id=${ids.join(",")}&part=contentDetails&key=${options.key}`,
-				method: "GET"
-			},
-			(err, res, body) => {
-				const contentDetailsResults = JSON.parse(body);
-
-				if (!err) {
-					//console.log(util.inspect(contentDetailsResults, false, null));
-
-					_.forEach(contentDetailsResults.items, r => {
-						let video = _.find(results, { id: r.id });
-						if (r.id) {
-							video.contentDetails = r.contentDetails;
-
-							finalSearchResults.push(video);
-						}
-					});
-						if (!args.song.startsWith("https://www.youtube.com/watch?v=") && !args.song.startsWith("http://www.youtube.com/watch?v=") && !args.song.startsWith("http://youtu.be/") && !args.song.startsWith("https://youtu.be/")) {
-							message.channel.send(finalSearchResults.map((currentValue, index) => {
-								return `${index + 1} - ${currentValue.title} by ${currentValue.channelTitle} [${currentValue.contentDetails.duration.replace("PT","").replace("H",":").replace("M",":").replace("S","")}]`;
-							}), {code: true, split: true}).then(newMessage => {
-								message.channel.awaitMessages(waitingMessage => (!isNaN(waitingMessage.content) || waitingMessage.content.toLowerCase() == "cancel") && waitingMessage.author == message.author, {max: 1}).then(messages => {
-									if (messages.first().content.toLowerCase() == "cancel") {
-										newMessage.delete();
-										messages.first().delete();
-										return message.channel.send("Canceled action!");
-									}
-									newMessage.delete();
-									messages.first().delete();
-									const number = messages.first() - 1;
-									self.playSong(results[number].link, results[number].title, results[number].channelTitle, message);
-								});
-							});
-						} else {
-							self.playSong(results[0].link, results[0].title, results[0].channelTitle, message);
-						}
-						//console.log(util.inspect(finalSearchResults, false, null));
-					} else {
-						console.log(err);
-					}
+				if (result.pageInfo.totalResults == 0) {
+					return message.channel.send("The youtube link is invalid!");
 				}
-			);
-		});
-	}
+
+				ISOtoReadable(result.items[0].contentDetails.duration);
+
+				this.playSong(`https://youtu.be/${args.song.match(ytRegEx)[1]}`, result.items[0].snippet.title, result.items[0].snippet.channelTitle, ISOtoReadable(result.items[0].contentDetails.duration), "youtube", message);
+      });
+    } else {
+      request({
+        url: `https://www.googleapis.com/youtube/v3/search?${querystring.stringify({q: args.song, part: 'snippet', maxResults: 10, key: keys['yt'], type: "video"})}`,
+        method: 'GET'
+      }, (error, response, result) => {
+        if (error) {
+          return console.error(error);
+          message.channel.send("There was an error, please try again!");
+        }
+
+
+        console.log(body);
+      });
+    }
+  }
 }
 
-module.exports = MusicPlayCommand;
+module.exports = playCommand;
